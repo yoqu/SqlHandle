@@ -1,5 +1,7 @@
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
+import java.util.Map;
 /**
  * mysql语法 sql语句拼接工具简类
  * 使用场景：需要快速书写sql语句时用到，主要使用的是mysql中的sql语法
@@ -23,7 +25,7 @@ public class SqlHandle {
 	 * 
 	 */
 	private StringBuffer sql=new StringBuffer();;
-	private HashMap<String, Object> operatefileds=new HashMap<String, Object>();
+	private Map<String, Object> operatefileds=new HashMap<String, Object>();
 	private ArrayList<Object> operatevalues=new ArrayList<Object>();
 	private ArrayList<String> fields = new ArrayList<String>();
 	private ArrayList<String> conditions =new ArrayList<String>();
@@ -44,12 +46,14 @@ public class SqlHandle {
 		this.operate=OPERATES[0];
 	}
 	/**
-	 * 初始化构造数据库操作
+	 * 初始化构造数据库操作,默认使用select查询
 	 * @param operate
 	 */
-	public SqlHandle(String operate){
-		this.operate=operate;
+	public SqlHandle(String table){
+		this.table=table;
+		this.operate=OPERATES[0];
 	}
+	
 	public SqlHandle OPERATE(String operate){
 		this.operate=operate;
 		return this;
@@ -64,10 +68,17 @@ public class SqlHandle {
 		operatefileds.put(propername, propervalue);
 		return this;
 	}
+	
+	public SqlHandle OPERATEFILED(Map<String, Object> fileds){
+		operatefileds.putAll(fileds);
+		return this;
+	}
+	
 	public SqlHandle OPERATEFILED(Object propervalue){
 		operatevalues.add(propervalue);
 		return this;
-	} 
+	}
+	
 	/**
 	 * 主要应用于select语句中，用于添加抬头字段
 	 * @param filed
@@ -110,7 +121,11 @@ public class SqlHandle {
 	private String filterValue(Object value){
 		if(value instanceof String){
 			return "'"+value+"'";
-		}else{
+		}
+		else if(value instanceof Date){
+			return "'"+value+"'";
+		}
+		else{
 			return value.toString();
 		}
 	}
@@ -125,6 +140,7 @@ public class SqlHandle {
 	}
 	
 	public String toString(){
+		sql.setLength(0);
 		switch (operate) {
 		case "select":
 			return selectToSql();
