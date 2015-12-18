@@ -1,3 +1,6 @@
+package com.worksystem.util;
+
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
@@ -22,16 +25,42 @@ public class SqlHandle {
 	 */
 	public static final String[] OPERATES={"select","insert","update","delete"};
 	/**
-	 * 
+	 * sql语句的String类型
 	 */
 	private StringBuffer sql=new StringBuffer();;
+	/**
+	 * 要操作的字段,用在update insert中的Set之后,字段名称和值进行对应
+	 */
 	private Map<String, Object> operatefileds=new HashMap<String, Object>();
+	
+	/**
+	 * 要操作的值 ,同于insert语句中的values,不需要跟字段名称,只需要值就OK了
+	 */
 	private ArrayList<Object> operatevalues=new ArrayList<Object>();
+	/**
+	 * select语句中用于select 后面的字段名称
+	 */
 	private ArrayList<String> fields = new ArrayList<String>();
+	
+	/**
+	 * 条件集合,用于where语句后面 形式例如 field1=value1
+	 */
 	private ArrayList<String> conditions =new ArrayList<String>();
+	/**
+	 * 操作符,使用select update delete insert者四种操作符
+	 */
 	private String operate="";
+	/**
+	 * 操作表 ,要操作的表
+	 */
 	private String table="";
+	/**
+	 * 限制 要限制的长度
+	 */
 	private String limit="";
+	/**
+	 * 排序规则,定制排序规则
+	 */
 	private String order="";
 	
 	public SqlHandle(String operate,String table){
@@ -90,7 +119,7 @@ public class SqlHandle {
 	}
 	
 	/**
-	 * 添加字段
+	 * 添加字段并可以给字段加别名
 	 * @param field
 	 * @param alias
 	 * @return
@@ -99,20 +128,43 @@ public class SqlHandle {
 		this.fields.add(field+" as "+alias);
 		return this;
 	}
+	/**
+	 * 添加字段
+	 * @param table
+	 * @return
+	 */
 	public SqlHandle TABLE(String table){
 		this.table=table;
 		return this;
 	}
 	
-	public SqlHandle CONDITION(String filed,String operator,Object value){
-		value.getClass().getTypeName();
-		String conditionStr=filed+" "+operator+" ";
+	public SqlHandle CONDITION(String field,String operator,Object value){
+		//value.getClass().getTypeName();
+		String conditionStr=field+" "+operator+" ";
 		//如果是String类型，需要加上单引号。
 		conditionStr+=filterValue(value);
 		this.conditions.add(conditionStr);
 		return this;
 	}
 	
+	/**
+	 * 一种条件场景 where id in (1,2,3) or where id not in (1,2,3)等
+	 * @param field
+	 * @param operator
+	 * @param values
+	 * @return
+	 */
+	public SqlHandle CONDITION(String field,String operator,Serializable... values){
+		String conditionStr=field+" "+operator+" (";
+		if(values.length>0){
+			for(int i=0;i<values.length-1;i++){
+				conditionStr+=filterValue(values[i])+",";	
+			}
+			conditionStr+=filterValue(values[values.length-1])+")";
+		}
+		this.conditions.add(conditionStr);
+		return this;
+	}
 	/**
 	 * 过滤值方法，如果是String类型添加单引号，不是直接返回原值
 	 * @param value
@@ -134,11 +186,14 @@ public class SqlHandle {
 		order=" "+field+" "+order;
 		return this;
 	}
+	
 	public SqlHandle LIMIT(int start,int length){
 		limit="  "+start+","+length;
 		return this;
 	}
-	
+	/**
+	 * 重写toString方法,返回sql结果
+	 */
 	public String toString(){
 		sql.setLength(0);
 		switch (operate) {
@@ -280,7 +335,7 @@ public class SqlHandle {
 		//排序语句
 		addorder();
 		//限制条目
-			addlimit();
+		addlimit();
 		return sql.toString();
 	}
 	
